@@ -9,12 +9,12 @@
 //! Unicode bidirectional algorithm and shaped with the font's own rules, so letters join and marks sit where the font
 //! puts them; every other line is set glyph by glyph, as it always was.
 
-use serde::{Deserialize, Serialize};
 use solidcraft_geom::{Ring, Vec2};
 
 use crate::fonts::{FontData, font_data_styled};
 use crate::link::{LinkGeom, LinkKind, LinkSource, MAX_LINK_ENTITIES};
 use crate::model::{Result, Sketch, SketchError};
+pub use crate::text_style::{TextAlign, TextStyle};
 
 /// Most characters in one text.
 pub const MAX_TEXT_CHARS: usize = 1000;
@@ -82,79 +82,6 @@ impl ttf_parser::OutlineBuilder for Outline {
         let s = self.start;
         self.line(s);
     }
-}
-
-/// Where each line of a text sits against its anchor (`at`, or a point of its path).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum TextAlign {
-    /// The line starts at the anchor.
-    #[default]
-    Left,
-    /// The line is centred on it.
-    Center,
-    /// The line ends at it.
-    Right,
-}
-
-impl TextAlign {
-    fn is_left(&self) -> bool {
-        *self == TextAlign::Left
-    }
-}
-
-/// How a text is set: the style of its font, where its lines sit, the space between its letters
-/// and lines, and the sketch curve its baseline follows (instead of the straight line from `at`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct TextStyle {
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub bold: bool,
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub italic: bool,
-    #[serde(default, skip_serializing_if = "TextAlign::is_left")]
-    pub align: TextAlign,
-    /// Extra space between letters (mm; negative brings them closer).
-    #[serde(default, skip_serializing_if = "is_zero")]
-    pub letter_spacing: f64,
-    /// The distance between lines as a multiple of the font's own.
-    #[serde(default = "one", skip_serializing_if = "is_one")]
-    pub line_spacing: f64,
-    /// The id of a curve of the same sketch the baseline follows (`at` and the angle then do not
-    /// place the text).
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub path: Option<String>,
-    /// Along the path the other way round, so the text sits on its other side.
-    #[serde(default, skip_serializing_if = "is_false")]
-    pub reverse: bool,
-}
-
-impl Default for TextStyle {
-    fn default() -> Self {
-        TextStyle { bold: false, italic: false, align: TextAlign::Left, letter_spacing: 0.0, line_spacing: 1.0, path: None, reverse: false }
-    }
-}
-
-impl TextStyle {
-    /// Nothing but the defaults (what a text saved before styles had).
-    pub fn is_plain(&self) -> bool {
-        *self == TextStyle::default()
-    }
-}
-
-fn is_false(b: &bool) -> bool {
-    !*b
-}
-
-fn is_zero(x: &f64) -> bool {
-    *x == 0.0
-}
-
-fn one() -> f64 {
-    1.0
-}
-
-fn is_one(x: &f64) -> bool {
-    *x == 1.0
 }
 
 /// How far a slanted (made-up italic) glyph leans: 12 degrees.

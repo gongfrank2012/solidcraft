@@ -9,6 +9,10 @@ license.workspace = true
 workspace = true
 
 [features]
+default = ["text"]
+# Sketch text: font loading and glyph layout (harfrust, ttf-parser, unicode-bidi). Without it
+# text links still load, save and keep their curves; only new text geometry cannot be laid out.
+text = ["dep:harfrust", "dep:ttf-parser", "dep:unicode-bidi"]
 # Opt-in developer instrumentation; normal builds contain no collection or clocks.
 solver-profiling = []
 
@@ -17,12 +21,12 @@ name = "solve_profile"
 required-features = ["solver-profiling"]
 
 [dependencies]
-harfrust = "0.12"
+harfrust = { version = "0.12", optional = true }
 solidcraft-geom = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
-ttf-parser = { workspace = true }
-unicode-bidi = "0.3"
+ttf-parser = { workspace = true, optional = true }
+unicode-bidi = { version = "0.3", optional = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }
